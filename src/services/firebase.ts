@@ -66,6 +66,3 @@ export class DbManager {
       .catch(err => new DataResponseClass([], 400, 'Couldnt Delete data', err, false))
   }
 }
-// const try1: Welcome = { title: 'Adrian', description: 'El groso', timeStamp: Date.now(), render: false, images: [] }
-const dbm = new DbManager('Bienvenido')
-dbm.getById('d8552bd4-12a8-1dce-bc83-ec3499343b3a').then(response => console.log(response)).catch(err => console.log(err))

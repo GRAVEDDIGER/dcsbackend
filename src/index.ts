@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import express from 'express'
+import welcome from './v1/welcome'
 import colors from 'colors'
-import morgan from 'morgan'
-// import helmet from "helmet";
-const app = express()
-const PORT = process.env.PORT || 8080
-app.use(express.json())
+const morgan = require('morgan')
+const app: express.Express = express()
+const port = process.env.PORT || 3000
 app.use(morgan('dev'))
-// app.use(helmet)
-app.listen(PORT, () => { console.log(colors.bgBlue.bold.white(`Server conected on port ${PORT}`)) })
+app.use(express.json())
+app.use(express.urlencoded({ extended: false }))
+app.use('/', welcome)
+app.listen(port, () => console.log(colors.bgBlue.white.bold(`Server listening on port ${port}`)))
