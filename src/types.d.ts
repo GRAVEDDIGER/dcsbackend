@@ -1,3 +1,4 @@
+import { NextFunction, Request, Response } from 'express'
 export interface Welcome {
   id?: string
   title: string
@@ -42,4 +43,21 @@ export interface DataResponse {
   status: number
   statusText: string
   err: string
+}
+export interface ValidationObject {
+  title?: RegExp
+  content?: RegExp
+  author?: RegExp
+  description?: RegExp
+  name?: RegExp
+  function?: RegExp
+}
+export type ValidationStrings = 'post' | 'members' | 'welcome' | 'learning'
+export interface ValidationType {
+  private readonly welcome?: ValidationObject
+  members?: ValidationObject
+  post?: ValidationObject
+  learning?: ValidationObject
+  validator: ValidationStrings
+  validate: (req: Request, res: Response, next: NextFunction) => Promise<void>
 }

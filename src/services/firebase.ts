@@ -1,5 +1,5 @@
 import { setDoc, doc, getDocs, collection, query, where, deleteDoc } from 'firebase/firestore'
-import { Welcome, Member, Learning, Post, DataResponse, GenericItem } from '../types'
+import { DataResponse, GenericItem } from '../types'
 import { v4 } from 'uuid'
 import db from '../config/firebase'
 export class DataResponseClass implements DataResponse {
