@@ -33,8 +33,12 @@ export interface Learning {
   images: string[]
   timeStampo: number
 }
+export interface GenericItem {
+  id?: string
+  item: Post | Welcome | Member | Learning
+}
 export interface DataResponse {
-  data: Array<Member | Post | Learning | Welcome>
+  data: GenericItem[]
   status: number
   statusText: string
   err: string
