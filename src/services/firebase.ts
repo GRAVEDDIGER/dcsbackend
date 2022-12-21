@@ -1,7 +1,10 @@
 import { setDoc, doc, getDocs, collection, query, where, deleteDoc } from 'firebase/firestore'
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { DataResponse, GenericItem } from '../types'
 import { v4 } from 'uuid'
+import fs from 'fs/promises'
 import db from '../config/firebase'
+const storage = getStorage()
 export class DataResponseClass implements DataResponse {
   data: GenericItem[]
   status: number
@@ -57,12 +60,27 @@ export class DbManager {
   async updateById (id: string, item: GenericItem): Promise<DataResponse> {
     return await setDoc(doc(db, this.collectionRef, id), item)
       .then(() => new DataResponseClass([{ ...item, id }], 200, 'Item succesifuly updated', '', true))
-      .catch(err => new DataResponseClass([], 400, 'Couldnt Retrieve data', err.toString(), false))
+      .catch(err => new DataResponseClass([], 400, 'Couldnt update item', err.toString(), false))
   }
 
   async deleteByid (id: string): Promise<DataResponse> {
     return await deleteDoc(doc(db, this.collectionRef, id))
       .then(() => new DataResponseClass([], 200, 'Success deleting a document', '', true))
       .catch(err => new DataResponseClass([], 400, 'Couldnt Delete data', err, false))
+  }
+
+  async upLoadFile (file: Express.Multer.File | undefined): Promise<string> {
+    if (file !== undefined) {
+      const buffer = await fs.readFile(file.path).then()
+      const reference = ref(storage, `/${this.collectionRef}/${file.filename}`)
+      try {
+        await uploadBytes(reference, buffer)
+        return await getDownloadURL(reference)
+      } catch (err: any) {
+        console.log(err)
+        return 'There was an error uploading the file'
+      }
+    }
+    return 'No file was uploaded'
   }
 }
