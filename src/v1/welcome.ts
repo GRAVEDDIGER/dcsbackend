@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { Router } from 'express'
-import { WelcomeController } from '../controllers/welcome'
+import { Controller } from '../controllers/controller'
 import { upload } from '../config/multer'
 const router = Router()
-const welcomeController = new WelcomeController('Bienvenido')
+const welcomeController = Controller('welcome')
 router.get('/', welcomeController.getController)
 router.get('/:id', welcomeController.getController)
 router.post('/', upload.single('images'), welcomeController.postController)

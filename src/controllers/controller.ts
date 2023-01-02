@@ -6,8 +6,8 @@ import colors from 'colors'
 import { Request, Response } from 'express'
 import { DbManager, DataResponseClass } from '../services/firebase'
 import fs from 'fs/promises'
-// const dbManager = new DbManager('Bienvenido')
-export function WelcomeController (collection: string): any {
+import { IController } from '../types'
+export function Controller (collection: string): IController {
   const dbManager = new DbManager(collection)
   async function getController (req: Request, res: Response): Promise<void> {
     const id: string = req.params.id
@@ -23,7 +23,6 @@ export function WelcomeController (collection: string): any {
       const uploadedFilePath = await dbManager.upLoadFile(req.file)
         .then((response: any) => {
           console.log(`${response}/${req.file?.filename || ' '}`)
-
           if (req.file?.path !== undefined) {
             fs.unlink(req.file.path).then(() => console.log('Upload Complete')).catch(err => console.log(err))
           }

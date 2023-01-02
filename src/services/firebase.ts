@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-useless-constructor */
 import { setDoc, doc, getDocs, collection, query, where, deleteDoc } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { DataResponse, GenericItem, DAO } from '../types'
+import { DataResponse, GenericItem } from '../types'
+import { DAO } from '../clases/abstractClasses'
 import { v4 } from 'uuid'
 import fs from 'fs/promises'
 import db from '../config/firebase'
@@ -22,6 +24,8 @@ export class DataResponseClass implements DataResponse {
 export class DbManager extends DAO {
   constructor (collectionRef: string) {
     super(collectionRef)
+
+    console.log(collectionRef)
   }
 
   async addItem (item: GenericItem): Promise<DataResponse> {
