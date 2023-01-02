@@ -7,22 +7,20 @@ import { Request, Response } from 'express'
 import { DbManager, DataResponseClass } from '../services/firebase'
 import fs from 'fs/promises'
 // const dbManager = new DbManager('Bienvenido')
-export class WelcomeController {
-  dbManager: any
-  constructor (collection: string) { this.dbManager = () => new DbManager(collection) }
-
-  async getController (req: Request, res: Response): Promise<void> {
+export function WelcomeController (collection: string): any {
+  const dbManager = new DbManager(collection)
+  async function getController (req: Request, res: Response): Promise<void> {
     const id: string = req.params.id
     if (id !== undefined) {
-      res.send(await this.dbManager.getById(id))
+      res.send(await dbManager.getById(id))
     } else {
-      res.send(await this.dbManager.getAll())
+      res.send(await dbManager.getAll())
     }
   }
 
-  async postController (req: Request, res: Response): Promise<void> {
+  async function postController (req: Request, res: Response): Promise<void> {
     if (req.file !== undefined) {
-      const uploadedFilePath = await this.dbManager.upLoadFile(req.file)
+      const uploadedFilePath = await dbManager.upLoadFile(req.file)
         .then((response: any) => {
           console.log(`${response}/${req.file?.filename || ' '}`)
 
@@ -37,14 +35,14 @@ export class WelcomeController {
         })
       const data = { ...req.body, images: uploadedFilePath }
       console.log(colors.bgRed.white(data))
-      res.send(await this.dbManager.addItem({ ...req.body, images: uploadedFilePath }))
+      res.send(await dbManager.addItem({ ...req.body, images: uploadedFilePath }))
     } else res.send(new DataResponseClass([], 400, 'Invalid Request no image uploaded', 'Invalid Request no image uploaded', false))
   }
 
-  async putController (req: Request, res: Response): Promise<void> {
+  async function putController (req: Request, res: Response): Promise<void> {
     const { id } = req.params
     if (req.file !== undefined) {
-      const uploadedFilePath = await this.dbManager.upLoadFile(req.file)
+      const uploadedFilePath = await dbManager.upLoadFile(req.file)
         .then((response: any) => {
           if (req.file?.path !== undefined) {
             fs.unlink(req.file.path).then(() => console.log('Upload Complete')).catch(err => console.log(err))
@@ -55,14 +53,15 @@ export class WelcomeController {
           console.log(err)
           res.send(new DataResponseClass([], 400, 'Imposible to upload the file', err.toString(), false))
         })
-      res.send(await this.dbManager.updateById(id, { ...req.body, images: uploadedFilePath }))
+      res.send(await dbManager.updateById(id, { ...req.body, images: uploadedFilePath }))
     } else res.send(new DataResponseClass([], 400, 'Invalid Request no image uploaded', 'Invalid Request no image uploaded', false))
   }
 
-  async deleteController (req: Request, res: Response): Promise<void> {
+  async function deleteController (req: Request, res: Response): Promise<void> {
     const { id } = req.params
     if (id !== undefined) {
-      res.send(await this.dbManager.deleteByid(id))
+      res.send(await dbManager.deleteByid(id))
     } else res.send(new DataResponseClass([], 400, 'Invalid Request no id', 'Invalid  Request no id', false))
   }
+  return { deleteController, postController, getController, putController }
 }

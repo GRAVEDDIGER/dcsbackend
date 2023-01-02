@@ -1,6 +1,6 @@
 import { setDoc, doc, getDocs, collection, query, where, deleteDoc } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { DataResponse, GenericItem } from '../types'
+import { DataResponse, GenericItem, DAO } from '../types'
 import { v4 } from 'uuid'
 import fs from 'fs/promises'
 import db from '../config/firebase'
@@ -19,10 +19,9 @@ export class DataResponseClass implements DataResponse {
     this.ok = ok
   }
 }
-export class DbManager {
-  private readonly collectionRef: string
+export class DbManager extends DAO {
   constructor (collectionRef: string) {
-    this.collectionRef = collectionRef
+    super(collectionRef)
   }
 
   async addItem (item: GenericItem): Promise<DataResponse> {

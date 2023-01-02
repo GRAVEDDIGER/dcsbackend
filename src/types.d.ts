@@ -61,3 +61,31 @@ export interface ValidationType {
   validator: ValidationStrings
   validate: (req: Request, res: Response, next: NextFunction) => Promise<void>
 }
+
+export interface addGetDAO {
+  getAll: () => Promise<DataResponse>
+  getById: (id: string) => Promise<DataResponse>
+  addItem: (item: GenericItem) => Promise<DataResponse>
+
+}
+export interface updateDeleteDAO {
+  updateById: (id: string, item: GenericItem) => Promise<DataResponse>
+  deleteByid: (id: string) => Promise<DataResponse>
+
+}
+export abstract class DAO implements addGetDAO, updateDeleteDAO {
+  constructor (
+    protected readonly collectionRef: string
+  ) {}
+  abstract getAll (): Promise<DataResponse>
+  abstract getById (id: string): Promise<DataResponse>
+  abstract addItem (item: GenericItem): Promise<DataResponse>
+  abstract updateById (id: string, item: GenericItem): Promise<DataResponse>
+  abstract deleteByid (id: string): Promise<DataResponse>
+}
+
+abstract class Controller {
+  constructor (
+    protected readonly collection: string
+  ) {}
+}
