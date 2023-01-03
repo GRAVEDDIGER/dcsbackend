@@ -6,25 +6,31 @@ import { DataResponseClass } from '../services/firebase'
 export class Validation implements ValidationType {
   readonly welcome: ValidationObject = {
     title: /[0-9a-zA-Z]{3}/,
-    description: /[0-9a-zA-Z]{3}/
+    description: /[0-9a-zA-Z]{3}/,
+    render: /(true)|(false)/
   }
 
   readonly about: ValidationObject = {
     name: /[0-9a-zA-Z]{3}/,
     function: /[0-9a-zA-Z]{3}/,
-    description: /[0-9a-zA-Z]{3}/
+    description: /[0-9a-zA-Z]{3}/,
+    render: /(true)|(false)/
+
   }
 
   readonly volunteers: ValidationObject = {
     title: /[0-9a-zA-Z]{3}/,
-    content: /[0-9a-zA-Z]{3}/
+    content: /[0-9a-zA-Z]{3}/,
+    render: /(true)|(false)/
 
   }
 
   readonly news: ValidationObject = {
     title: /[0-9a-zA-Z]{3}/,
     content: /[0-9a-zA-Z]{3}/,
-    author: /[0-9a-zA-Z]{3}/
+    author: /[0-9a-zA-Z]{3}/,
+    render: /(true)|(false)/
+
   }
 
   readonly validator: ValidationStrings
@@ -38,7 +44,7 @@ export class Validation implements ValidationType {
     const bodyData = req.body
     const response: boolean[] = []
     validationKeys.forEach(key => {
-      if (validatorObject[key as keyof ValidationObject]?.test(bodyData[key])) {
+      if (validatorObject[key as keyof ValidationObject]?.test(bodyData[key].toString())) {
         response.push(true)
       } else response.push(false)
     })

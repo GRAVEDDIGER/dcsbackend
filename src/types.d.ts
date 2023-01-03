@@ -51,6 +51,7 @@ export interface ValidationObject {
   description?: RegExp
   name?: RegExp
   function?: RegExp
+  render?: RegExp
 }
 export type ValidationStrings = 'news' | 'about' | 'welcome' | 'volunteers'
 export interface ValidationType {
