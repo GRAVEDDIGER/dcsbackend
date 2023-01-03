@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-useless-constructor */
 import { setDoc, doc, getDocs, collection, query, where, deleteDoc } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { DataResponse, GenericItem } from '../types'
 import { DAO } from '../clases/abstractClasses'
 import { v4 } from 'uuid'
-import fs from 'fs/promises'
 import db from '../config/firebase'
+// import fs from 'fs/promises'
+const fs = require('fs').promises
 const storage = getStorage()
 export class DataResponseClass implements DataResponse {
   data: GenericItem[]

@@ -54,7 +54,7 @@ export interface ValidationObject {
 }
 export type ValidationStrings = 'news' | 'about' | 'welcome' | 'volunteers'
 export interface ValidationType {
-  private readonly welcome?: ValidationObject
+  welcome?: ValidationObject
   About?: ValidationObject
   news?: ValidationObject
   Volunteers?: ValidationObject

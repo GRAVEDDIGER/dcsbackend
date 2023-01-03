@@ -1,4 +1,4 @@
-import multer from 'multer'
+import multer =require('multer')
 import { v4 } from 'uuid'
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
