@@ -7,8 +7,8 @@
     "init": "tsc --init",
     "lint": "ts-standard",
     "dev": "ts-node-dev ./src/index.ts",
-    "try": "ts-node-dev ./src/services/firebase.ts",
-    "start":"tsc"
+    "build": "tsc",
+    "start":"node ./build/index.js"
   },
   "keywords": [],
   "author": "",
