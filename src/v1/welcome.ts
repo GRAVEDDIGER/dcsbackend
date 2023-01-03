@@ -3,10 +3,10 @@ import { Router } from 'express'
 import { Controller } from '../controllers/controller'
 import { upload } from '../config/multer'
 const router = Router()
-const welcomeController = Controller('welcome')
-router.get('/', welcomeController.getController)
-router.get('/:id', welcomeController.getController)
-router.post('/', upload.single('images'), welcomeController.postController)
-router.put('/:id', upload.single('images'), welcomeController.putController)
-router.delete('/:id', welcomeController.deleteController)
+const { readData, createData, editData, deleteData } = Controller('welcome')
+router.get('/', readData)
+router.get('/:id', readData)
+router.post('/', upload.single('images'), createData)
+router.put('/:id', upload.single('images'), editData)
+router.delete('/:id', deleteData)
 export default router

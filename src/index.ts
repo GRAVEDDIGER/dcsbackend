@@ -6,11 +6,13 @@ import welcome from './v1/welcome'
 import volunteers from './v1/volunteers'
 import news from './v1/news'
 import about from './v1/about'
-
 import colors from 'colors'
+import cors from 'cors'
+
 const morgan = require('morgan')
 const app: express.Express = express()
 const port = process.env.PORT || 3000
+app.use(cors())
 app.use(morgan('dev'))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.urlencoded({ extended: false }))

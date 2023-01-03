@@ -6,21 +6,24 @@ import colors from 'colors'
 import { Request, Response } from 'express'
 import { DbManager, DataResponseClass } from '../services/firebase'
 import fs from 'fs/promises'
-import { IController } from '../types'
-export function Controller (collection: string): IController {
-  const dbManager = new DbManager(collection)
-  async function readData (req: Request, res: Response): Promise<void> {
+export class Controller {
+  protected readonly dbManager: DbManager
+  constructor (collection: string) {
+    this.dbManager = new DbManager(collection)
+  }
+
+  async getController (req: Request, res: Response): Promise<void> {
     const id: string = req.params.id
     if (id !== undefined) {
-      res.send(await dbManager.getById(id))
+      res.send(await this.dbManager.getById(id))
     } else {
-      res.send(await dbManager.getAll())
+      res.send(await this.dbManager.getAll())
     }
   }
 
-  async function createData (req: Request, res: Response): Promise<void> {
+  async postController (req: Request, res: Response): Promise<void> {
     if (req.file !== undefined) {
-      const uploadedFilePath = await dbManager.upLoadFile(req.file)
+      const uploadedFilePath = await this.dbManager.upLoadFile(req.file)
         .then((response: any) => {
           console.log(`${response}/${req.file?.filename || ' '}`)
           if (req.file?.path !== undefined) {
@@ -34,14 +37,14 @@ export function Controller (collection: string): IController {
         })
       const data = { ...req.body, images: uploadedFilePath }
       console.log(colors.bgRed.white(data))
-      res.send(await dbManager.addItem({ ...req.body, images: uploadedFilePath }))
+      res.send(await this.dbManager.addItem({ ...req.body, images: uploadedFilePath }))
     } else res.send(new DataResponseClass([], 400, 'Invalid Request no image uploaded', 'Invalid Request no image uploaded', false))
   }
 
-  async function editData (req: Request, res: Response): Promise<void> {
+  async putController (req: Request, res: Response): Promise<void> {
     const { id } = req.params
     if (req.file !== undefined) {
-      const uploadedFilePath = await dbManager.upLoadFile(req.file)
+      const uploadedFilePath = await this.dbManager.upLoadFile(req.file)
         .then((response: any) => {
           if (req.file?.path !== undefined) {
             fs.unlink(req.file.path).then(() => console.log('Upload Complete')).catch(err => console.log(err))
@@ -52,15 +55,14 @@ export function Controller (collection: string): IController {
           console.log(err)
           res.send(new DataResponseClass([], 400, 'Imposible to upload the file', err.toString(), false))
         })
-      res.send(await dbManager.updateById(id, { ...req.body, images: uploadedFilePath }))
+      res.send(await this.dbManager.updateById(id, { ...req.body, images: uploadedFilePath }))
     } else res.send(new DataResponseClass([], 400, 'Invalid Request no image uploaded', 'Invalid Request no image uploaded', false))
   }
 
-  async function deleteData (req: Request, res: Response): Promise<void> {
+  async deleteController (req: Request, res: Response): Promise<void> {
     const { id } = req.params
     if (id !== undefined) {
-      res.send(await dbManager.deleteByid(id))
+      res.send(await this.dbManager.deleteByid(id))
     } else res.send(new DataResponseClass([], 400, 'Invalid Request no id', 'Invalid  Request no id', false))
   }
-  return { deleteData, createData, readData, editData }
 }

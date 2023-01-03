@@ -24,8 +24,6 @@ export class DataResponseClass implements DataResponse {
 export class DbManager extends DAO {
   constructor (collectionRef: string) {
     super(collectionRef)
-
-    console.log(collectionRef)
   }
 
   async addItem (item: GenericItem): Promise<DataResponse> {

@@ -7,7 +7,7 @@ export interface Welcome {
   render: boolean
   images: string[]
 }
-export interface Member {
+export interface About {
   id?: string
   name: string
   function: string
@@ -16,7 +16,7 @@ export interface Member {
   images: string[]
   timeStamp: number
 }
-export interface Post {
+export interface News {
   id?: string
   title: string
   content: string
@@ -26,7 +26,7 @@ export interface Post {
   timeStamp: number
 }
 
-export interface Learning {
+export interface Volunteers {
   id?: string
   title: string
   content: string
@@ -36,7 +36,7 @@ export interface Learning {
 }
 export interface GenericItem {
   id?: string
-  item: Post | Welcome | Member | Learning
+  item: News | Welcome | About | Volunteers
 }
 export interface DataResponse {
   data: GenericItem[]
@@ -52,12 +52,12 @@ export interface ValidationObject {
   name?: RegExp
   function?: RegExp
 }
-export type ValidationStrings = 'post' | 'members' | 'welcome' | 'learning'
+export type ValidationStrings = 'news' | 'about' | 'welcome' | 'volunteers'
 export interface ValidationType {
   private readonly welcome?: ValidationObject
-  members?: ValidationObject
-  post?: ValidationObject
-  learning?: ValidationObject
+  About?: ValidationObject
+  news?: ValidationObject
+  Volunteers?: ValidationObject
   validator: ValidationStrings
   validate: (req: Request, res: Response, next: NextFunction) => Promise<void>
 }
@@ -74,8 +74,18 @@ export interface updateDeleteDAO {
 
 }
 export interface IController {
-  getController: (req: Request, res: Response) => Promise<void>
-  postController: (req: Request, res: Response) => Promise<void>
-  putController: (req: Request, res: Response) => Promise<void>
-  deleteController: (req: Request, res: Response) => Promise<void>
+  readData: (req: Request, res: Response) => Promise<void>
+  createData: (req: Request, res: Response) => Promise<void>
+  editData: (req: Request, res: Response) => Promise<void>
+  deleteData: (req: Request, res: Response) => Promise<void>
+}
+export interface readCreateData {
+  readData: (req: Request, res: Response) => Promise<void>
+  createData: (req: Request, res: Response) => Promise<void>
+
+}
+export interface editDeleteData {
+  editData: (req: Request, res: Response) => Promise<void>
+  deleteData: (req: Request, res: Response) => Promise<void>
+
 }

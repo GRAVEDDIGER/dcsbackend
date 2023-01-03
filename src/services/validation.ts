@@ -9,19 +9,19 @@ export class Validation implements ValidationType {
     description: /[0-9a-zA-Z]{3}/
   }
 
-  readonly members: ValidationObject = {
+  readonly about: ValidationObject = {
     name: /[0-9a-zA-Z]{3}/,
     function: /[0-9a-zA-Z]{3}/,
     description: /[0-9a-zA-Z]{3}/
   }
 
-  readonly learning: ValidationObject = {
+  readonly volunteers: ValidationObject = {
     title: /[0-9a-zA-Z]{3}/,
     content: /[0-9a-zA-Z]{3}/
 
   }
 
-  readonly post: ValidationObject = {
+  readonly news: ValidationObject = {
     title: /[0-9a-zA-Z]{3}/,
     content: /[0-9a-zA-Z]{3}/,
     author: /[0-9a-zA-Z]{3}/
@@ -41,6 +41,9 @@ export class Validation implements ValidationType {
       if (validatorObject[key as keyof ValidationObject]?.test(bodyData[key])) {
         response.push(true)
       } else response.push(false)
+    })
+    Object.keys(req.body).forEach(key => {
+      if (!(key in this[this.validator])) { req.body[key] = undefined }
     })
     if (response.includes(false)) res.send(new DataResponseClass([], 403, 'Invalid data', 'Didnt pass validation', false))
     next()
