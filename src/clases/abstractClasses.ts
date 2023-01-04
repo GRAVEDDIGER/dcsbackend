@@ -19,3 +19,5 @@ export abstract class AbstractController implements readCreateData, editDeleteDa
   abstract editData (req: Request, res: Response): Promise<void>
   abstract deleteData (req: Request, res: Response): Promise<void>
 }
+
+// export abstract class AbstractValidator{}
