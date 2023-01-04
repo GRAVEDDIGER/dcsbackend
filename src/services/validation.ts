@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-dynamic-delete */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { NextFunction, Request, Response } from 'express'
 import { ValidationStrings, ValidationObject, ValidationType } from '../types'
@@ -38,20 +39,23 @@ export class Validation implements ValidationType {
     this.validator = validator
   }
 
-  async validate (req: Request, res: Response, next: NextFunction): Promise<void> {
+  validate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const validationKeys = Object.keys(this[this.validator])
     const validatorObject: ValidationObject = this[this.validator]
     const bodyData = req.body
     const response: boolean[] = []
     validationKeys.forEach(key => {
-      if (validatorObject[key as keyof ValidationObject]?.test(bodyData[key].toString())) {
+      if (validatorObject[key as keyof ValidationObject]?.test(bodyData[key]?.toString())) {
         response.push(true)
       } else response.push(false)
     })
     Object.keys(req.body).forEach(key => {
-      if (!(key in this[this.validator])) { req.body[key] = undefined }
+      if (!(key in this[this.validator])) {
+        delete req.body[key]
+      }
     })
-    if (response.includes(false)) res.send(new DataResponseClass([], 403, 'Invalid data', 'Didnt pass validation', false))
-    next()
+    if (response.includes(false)) {
+      res.status(400).send(new DataResponseClass([], 400, 'Invalid data', 'Didnt pass validation', false))
+    } else next()
   }
 }

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 /* eslint-disable @typescript-eslint/no-extraneous-class */
-import colors from 'colors'
+// import colors from 'colors'
 import { Request, Response } from 'express'
 import { DbManager, DataResponseClass } from '../services/firebase'
 import fs from 'fs/promises'
@@ -12,7 +12,7 @@ export class Controller {
     this.dbManager = new DbManager(collection)
   }
 
-  async getController (req: Request, res: Response): Promise<void> {
+  readData = async (req: Request, res: Response): Promise<void> => {
     const id: string = req.params.id
     if (id !== undefined) {
       res.send(await this.dbManager.getById(id))
@@ -21,11 +21,11 @@ export class Controller {
     }
   }
 
-  async postController (req: Request, res: Response): Promise<void> {
+  createData = async (req: Request, res: Response): Promise<void> => {
     if (req.file !== undefined) {
       const uploadedFilePath = await this.dbManager.upLoadFile(req.file)
         .then((response: any) => {
-          console.log(`${response}/${req.file?.filename || ' '}`)
+          // console.log(`${response}/${req.file?.filename || ' '}`)
           if (req.file?.path !== undefined) {
             fs.unlink(req.file.path).then(() => console.log('Upload Complete')).catch(err => console.log(err))
           }
@@ -35,13 +35,13 @@ export class Controller {
           console.log(err)
           res.send(false)
         })
-      const data = { ...req.body, images: uploadedFilePath }
-      console.log(colors.bgRed.white(data))
+      // const data = { ...req.body, images: uploadedFilePath }
+      // console.log(colors.bgRed.white(data))
       res.send(await this.dbManager.addItem({ ...req.body, images: uploadedFilePath }))
     } else res.send(new DataResponseClass([], 400, 'Invalid Request no image uploaded', 'Invalid Request no image uploaded', false))
   }
 
-  async putController (req: Request, res: Response): Promise<void> {
+  editData = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params
     if (req.file !== undefined) {
       const uploadedFilePath = await this.dbManager.upLoadFile(req.file)
@@ -59,7 +59,7 @@ export class Controller {
     } else res.send(new DataResponseClass([], 400, 'Invalid Request no image uploaded', 'Invalid Request no image uploaded', false))
   }
 
-  async deleteController (req: Request, res: Response): Promise<void> {
+  deleteData = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params
     if (id !== undefined) {
       res.send(await this.dbManager.deleteByid(id))
