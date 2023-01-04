@@ -4,12 +4,15 @@
 /* eslint-disable @typescript-eslint/no-extraneous-class */
 // import colors from 'colors'
 import { Request, Response } from 'express'
-import { DbManager, DataResponseClass } from '../services/firebase'
+import { DataResponseClass } from '../services/firebase'
+import { AbstractController } from '../clases/abstractClasses'
 import fs from 'fs/promises'
-export class Controller {
-  protected readonly dbManager: DbManager
+export class Controller extends AbstractController {
+  // protected readonly dbManager: DbManager
+  // eslint-disable-next-line @typescript-eslint/no-useless-constructor
   constructor (collection: string) {
-    this.dbManager = new DbManager(collection)
+    super(collection)
+    // this.dbManager = new DbManager(collection)
   }
 
   readData = async (req: Request, res: Response): Promise<void> => {
