@@ -45,15 +45,19 @@ export interface DataResponse {
   err: string
 }
 export interface ValidationObject {
-  title?: RegExp
-  content?: RegExp
-  author?: RegExp
-  description?: RegExp
-  name?: RegExp
-  function?: RegExp
-  render?: RegExp
+  title?: { regExp: RegExp, code: string, description: string }
+  content?: { regExp: RegExp, code: string, description: string }
+  author?: { regExp: RegExp, code: string, description: string }
+  description?: { regExp: RegExp, code: string, description: string }
+  name?: { regExp: RegExp, code: string, description: string }
+  function?: { regExp: RegExp, code: string, description: string }
+  render?: { regExp: RegExp, code: string, description: string }
 }
 export type ValidationStrings = 'news' | 'about' | 'welcome' | 'volunteers'
+export interface ValidationError {
+  ok: boolean
+  err: string
+}
 export interface ValidationType {
   welcome?: ValidationObject
   About?: ValidationObject
@@ -90,3 +94,4 @@ export interface editDeleteData {
   deleteData: (req: Request, res: Response) => Promise<void>
 
 }
+// export interface

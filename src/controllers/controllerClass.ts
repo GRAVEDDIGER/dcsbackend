@@ -8,11 +8,9 @@ import { DataResponseClass } from '../services/firebase'
 import { AbstractController } from '../clases/abstractClasses'
 import fs from 'fs/promises'
 export class Controller extends AbstractController {
-  // protected readonly dbManager: DbManager
   // eslint-disable-next-line @typescript-eslint/no-useless-constructor
   constructor (collection: string) {
     super(collection)
-    // this.dbManager = new DbManager(collection)
   }
 
   readData = async (req: Request, res: Response): Promise<void> => {

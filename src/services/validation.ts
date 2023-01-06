@@ -1,36 +1,36 @@
 /* eslint-disable @typescript-eslint/no-dynamic-delete */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { NextFunction, Request, Response } from 'express'
-import { ValidationStrings, ValidationObject, ValidationType } from '../types'
-import { DataResponseClass } from '../services/firebase'
+import { ValidationStrings, ValidationObject, ValidationType, ValidationError } from '../types'
+// import { DataResponseClass } from '../services/firebase'
 
 export class Validation implements ValidationType {
   readonly welcome: ValidationObject = {
-    title: /[0-9a-zA-Z]{3}/,
-    description: /[0-9a-zA-Z]{3}/,
-    render: /(true)|(false)/
+    title: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    description: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    render: { regExp: /(true)|(false)/, code: '102', description: 'Render must be true or false' }
   }
 
   readonly about: ValidationObject = {
-    name: /[0-9a-zA-Z]{3}/,
-    function: /[0-9a-zA-Z]{3}/,
-    description: /[0-9a-zA-Z]{3}/,
-    render: /(true)|(false)/
+    name: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    function: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    description: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    render: { regExp: /(true)|(false)/, code: '102', description: 'Render must be true or false' }
 
   }
 
   readonly volunteers: ValidationObject = {
-    title: /[0-9a-zA-Z]{3}/,
-    content: /[0-9a-zA-Z]{3}/,
-    render: /(true)|(false)/
+    title: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    content: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    render: { regExp: /(true)|(false)/, code: '102', description: 'Render must be true or false' }
 
   }
 
   readonly news: ValidationObject = {
-    title: /[0-9a-zA-Z]{3}/,
-    content: /[0-9a-zA-Z]{3}/,
-    author: /[0-9a-zA-Z]{3}/,
-    render: /(true)|(false)/
+    title: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    content: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    author: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
+    render: { regExp: /(true)|(false)/, code: '102', description: 'Render must be true or false' }
 
   }
 
@@ -43,19 +43,22 @@ export class Validation implements ValidationType {
     const validationKeys = Object.keys(this[this.validator])
     const validatorObject: ValidationObject = this[this.validator]
     const bodyData = req.body
-    const response: boolean[] = []
+    const response: ValidationError[] = []
     validationKeys.forEach(key => {
-      if (validatorObject[key as keyof ValidationObject]?.test(bodyData[key]?.toString())) {
-        response.push(true)
-      } else response.push(false)
+      if (validatorObject[key as keyof ValidationObject]?.regExp?.test(bodyData[key]?.toString())) {
+        response.push({ ok: true, err: '' })
+      } else {
+        response.push({ ok: false, err: `Error: ${validatorObject[key as keyof ValidationObject]?.code.toString() as string} the key: ${key} needs to have ${validatorObject[key as keyof ValidationObject]?.description as string}` })
+      }
     })
     Object.keys(req.body).forEach(key => {
       if (!(key in this[this.validator])) {
         delete req.body[key]
       }
     })
-    if (response.includes(false)) {
-      res.status(400).send(new DataResponseClass([], 400, 'Invalid data', 'Didnt pass validation', false))
+    // falta arreglar el if de abajo con un find
+    if (response.find(res => !res.ok) !== undefined) {
+      res.status(400).send(response)
     } else next()
   }
 }
