@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 export interface Welcome {
   id?: string
   title: string
@@ -36,7 +36,10 @@ export interface Volunteers {
 }
 export type AnyDataPosted = Partial <Omit <(Welcome & News & About & Volunteers), 'timeStamp'>>
 export type AnyDataKeys = Partial<keyof(AnyDataPosted)>
-
+export interface DataObjectVal {
+  ok: boolean
+  key: string
+}
 export interface GenericItem {
   id?: string
   item: News | Welcome | About | Volunteers
@@ -46,28 +49,7 @@ export interface DataResponse {
   status: number
   statusText: string
   err: string
-}
-export interface ValidationObject {
-  title?: { regExp: RegExp, code: string, description: string }
-  content?: { regExp: RegExp, code: string, description: string }
-  author?: { regExp: RegExp, code: string, description: string }
-  description?: { regExp: RegExp, code: string, description: string }
-  name?: { regExp: RegExp, code: string, description: string }
-  function?: { regExp: RegExp, code: string, description: string }
-  render?: { regExp: RegExp, code: string, description: string }
-}
-export type ValidationStrings = 'news' | 'about' | 'welcome' | 'volunteers'
-export interface ValidationError {
   ok: boolean
-  err: string
-}
-export interface ValidationType {
-  welcome?: ValidationObject
-  About?: ValidationObject
-  news?: ValidationObject
-  Volunteers?: ValidationObject
-  validator: ValidationStrings
-  validate: (req: Request, res: Response, next: NextFunction) => Promise<void>
 }
 
 export interface addGetDAO {

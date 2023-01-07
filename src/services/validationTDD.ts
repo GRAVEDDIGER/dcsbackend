@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { GenericItem, DataResponse, AnyDataPosted, AnyDataKeys } from '../types'
+import { GenericItem, DataResponse, AnyDataPosted, AnyDataKeys, DataObjectVal } from '../types'
 class DataResponseClass implements DataResponse {
   data: GenericItem[]
   status: number
@@ -16,37 +16,34 @@ class DataResponseClass implements DataResponse {
 }
 interface IvalidationMiddleware {
   run: (req: Request, res: Response, next: NextFunction) => void
-  validate: (validationObject: any) => boolean
+  validate: (validationObject: any) => DataResponse
 }
 function ValidationMiddleware (): IvalidationMiddleware {
   const isText = (obj: string | boolean): boolean => Object.prototype.toString.call(obj) === '[Object String]' || typeof obj === 'string'
 
   const validateText = (text: string): boolean => text.length > 3
-  const validate = (validationObject: AnyDataPosted): boolean => {
-    if ((validationObject?.render) === undefined) {
-      return false
-    }
-    const boolArray: boolean[] = []
+  const validate = (validationObject: AnyDataPosted): DataResponse => {
+    const boolArray: DataObjectVal[] = []
     const bodyKeys: AnyDataKeys[] = Object.keys(validationObject) as AnyDataKeys[]
-    console.log('llego hasta el render', ('render' in validationObject), validationObject)
-    if (!('render' in validationObject)) return false
-
+    if (validationObject?.render === undefined) return new DataResponseClass([], 400, 'Bad Request didnt provide a render status', 'Bad request coudlnt findrender status', false)
+    if (!('render' in validationObject)) return new DataResponseClass([], 400, 'Bad Request didnt provide a render status', 'Bad request coudlnt find render status', false)
     bodyKeys.forEach(clave => {
       if (clave !== undefined) {
         if (typeof validationObject[clave] !== 'undefined') {
-          if (isText(validationObject[clave] as string)) boolArray.push(validateText(validationObject[clave] as string))
+          if (isText(validationObject[clave] as string)) boolArray.push({ ok: validateText(validationObject[clave] as string), key: clave })
         }
       }
     })
-    const respuesta = !boolArray.includes(false)
-    console.log(respuesta)
-    return respuesta
+    if (boolArray.find(item => !item.ok) === undefined) {
+      return new DataResponseClass([], 200, 'Information Validated', '', true)
+    } else return new DataResponseClass([], 200, 'The field list provided on Data didnt pass validation', 'Validation failed', false)
   }
   const run = (req: Request, res: Response, next: NextFunction): void => {
-    if (validate(req?.body)) next()
-    else res.status(400).send(new DataResponseClass([], 400, 'Failed Validation', 'Failed Validation', false))
+    const condicion = validate(req.body)
+    if (condicion.ok) {
+      next()
+    } else res.status(condicion.status).send(condicion)
   }
-
   return { run, validate }
 }
 export const ValMiddleWare = ValidationMiddleware()

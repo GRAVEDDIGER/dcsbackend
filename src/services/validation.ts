@@ -1,9 +1,28 @@
 /* eslint-disable @typescript-eslint/no-dynamic-delete */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { NextFunction, Request, Response } from 'express'
-import { ValidationStrings, ValidationObject, ValidationType, ValidationError } from '../types'
-// import { DataResponseClass } from '../services/firebase'
-
+export type ValidationStrings = 'news' | 'about' | 'welcome' | 'volunteers'
+export interface ValidationType {
+  welcome?: ValidationObject
+  About?: ValidationObject
+  news?: ValidationObject
+  Volunteers?: ValidationObject
+  validator: ValidationStrings
+  validate: (req: Request, res: Response, next: NextFunction) => Promise<void>
+}
+export interface ValidationError {
+  ok: boolean
+  err: string
+}
+export interface ValidationObject {
+  title?: { regExp: RegExp, code: string, description: string }
+  content?: { regExp: RegExp, code: string, description: string }
+  author?: { regExp: RegExp, code: string, description: string }
+  description?: { regExp: RegExp, code: string, description: string }
+  name?: { regExp: RegExp, code: string, description: string }
+  function?: { regExp: RegExp, code: string, description: string }
+  render?: { regExp: RegExp, code: string, description: string }
+}
 export class Validation implements ValidationType {
   readonly welcome: ValidationObject = {
     title: { regExp: /[0-9a-zA-Z!¡#%@&ÁÉéÍíÓóÚúá]{3}/, code: '101', description: 'You must provide at least 3 caracters' },
