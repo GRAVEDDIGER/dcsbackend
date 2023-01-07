@@ -56,7 +56,6 @@ export class Validation implements ValidationType {
         delete req.body[key]
       }
     })
-    // falta arreglar el if de abajo con un find
     if (response.find(res => !res.ok) !== undefined) {
       res.status(400).send(response)
     } else next()

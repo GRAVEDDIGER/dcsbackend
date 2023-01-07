@@ -32,8 +32,11 @@ export interface Volunteers {
   content: string
   render: boolean
   images: string[]
-  timeStampo: number
+  timeStamp: number
 }
+export type AnyDataPosted = Partial <Omit <(Welcome & News & About & Volunteers), 'timeStamp'>>
+export type AnyDataKeys = Partial<keyof(AnyDataPosted)>
+
 export interface GenericItem {
   id?: string
   item: News | Welcome | About | Volunteers
