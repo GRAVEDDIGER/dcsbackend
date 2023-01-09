@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/return-await */
 /* eslint-disable @typescript-eslint/no-useless-constructor */
+
 import { setDoc, doc, getDocs, collection, query, where, deleteDoc, getDoc } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { DataResponse, GenericItem, AnyDataPosted } from '../types'
@@ -6,7 +8,20 @@ import { DAO } from '../clases/abstractClasses'
 import { v4 } from 'uuid'
 import db from '../config/firebase'
 /// //////////////////////////////////////
-import { it, describe, expect } from 'vitest'
+import { it, describe, expect, vi } from 'vitest'
+import { afterEach } from 'node:test'
+vi.mock('../node_modules/firebase/firestore')
+setDoc.mockReturnValue(Promise.resolve({}))
+// const setDoc = vi.fn().mockReturnValue(new Promise<void>((res, rej) => {
+//   res(
+//     // {
+//     // data: () => {
+//     //   return { ok: true }
+//     // }
+//   // }
+//   )
+// }))
+// const getDoc=vi.fn().mockReturnValue(new Promise((resolve, reject) => {})
 
 export class DataResponseClass implements DataResponse {
   data: GenericItem[]
@@ -22,7 +37,6 @@ export class DataResponseClass implements DataResponse {
     this.ok = ok
   }
 }
-
 interface IDao {
   addItem: (item: GenericItem) => Promise<DataResponse>
   getAll: () => Promise<DataResponse>
@@ -32,9 +46,9 @@ interface IDao {
 }
 export function DbManager (collectionStr: string): IDao {
   const collectionRef = collectionStr
+
   async function addItem (item: GenericItem): Promise<DataResponse> {
     const id = v4()
-
     if (!('render' in item.item)) return new DataResponseClass([], 400, 'Render is not in the item object', 'Bad Request', false)
     else {
       return await setDoc(doc(db, collectionRef, id), { ...item.item, id })
@@ -71,6 +85,7 @@ export function DbManager (collectionStr: string): IDao {
   }
   return { addItem, getAll, getById, updateById, deleteById }
 }
+
 const dbManager = DbManager('welcome')
 console.log(dbManager.addItem)
 describe('DbManager addItem tests', () => {
@@ -83,20 +98,27 @@ describe('DbManager addItem tests', () => {
   it('Should return ok if render is present in the object', async () => {
     expect(await dbManager.addItem({ item: { description: 'texto', title: 'titulo', render: true } })).toContain({ ok: true })
   })
+  it('Expect setDoc to be called', async () => {
+    expect(setDoc).toBeCalled()
+    const cosa = await dbManager.addItem({ item: { render: true, description: 'Adrian' } })
+    expect(cosa).toContain({ ok: true })
+    // expect(dbManager.addItem({ item: { render: true, description: 'Adrian' } })).toContain({ ok: true })
+  })
 })
 describe('DbManager getAll functions', () => {
   it('Should be a function', () => {
     expect(typeof dbManager.getAll).toBe('function')
   })
-})
-describe('DbManager getById', () => {
-  it('Should contain false if id is not a string', async () => {
-    expect(await dbManager.getById(1)).toContain({ ok: false })
-    expect(await dbManager.getById({})).toContain({ ok: false })
-    expect(await dbManager.getById(true)).toContain({ ok: false })
-    expect(await dbManager.getById(NaN)).toContain({ ok: false })
-  })
-  it('Should return un valor truthy si param es tipo string', async () => {
-    expect(dbManager.getById('00637abb-40c2-4e04-bcd9-b395555ef99f')).toBeTruthy()
+
+  describe('DbManager getById', () => {
+    it('Should contain false if id is not a string', async () => {
+      expect(await dbManager.getById(1)).toContain({ ok: false })
+      expect(await dbManager.getById({})).toContain({ ok: false })
+      expect(await dbManager.getById(true)).toContain({ ok: false })
+      expect(await dbManager.getById(NaN)).toContain({ ok: false })
+    })
+    it('Should return un valor truthy si param es tipo string', async () => {
+      expect(dbManager.getById('00637abb-40c2-4e04-bcd9-b395555ef99f')).toBeTruthy()
+    })
   })
 })

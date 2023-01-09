@@ -1,0 +1,8 @@
+23:46:05.093 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
+23:46:05.450 [main] INFO com.firebase.server.forge.App$ - Listening at 127.0.0.1:9000
+23:46:29.794 [NamespaceSystem-akka.actor.default-dispatcher-6] INFO com.firebase.core.namespace.NamespaceActor - defensacivilsaladillo-18702-default-rtdb successfully activated FBKV (SurveyIdle(0)) wait: 276ms, init: 0ms
+23:46:30.043 [NamespaceSystem-blocking-namespace-operation-dispatcher-7] INFO com.firebase.core.namespace.StateManager - Namespace defensacivilsaladillo-18702-default-rtdb status Active to Active
+01:12:09.066 [Thread-0] INFO com.firebase.server.forge.App$ - Attempting graceful shutdown.
+01:12:09.085 [NamespaceSystem-akka.actor.default-dispatcher-5] INFO com.firebase.core.namespace.Terminator$Terminator - 1 actors left to terminate: defensacivilsaladillo-18702-default-rtdb
+01:12:09.108 [NamespaceSystem-akka.actor.default-dispatcher-6] INFO com.firebase.core.namespace.NamespaceActor - stopped namespace actor for defensacivilsaladillo-18702-default-rtdb
+01:12:09.131 [Thread-0] INFO com.firebase.server.forge.App$ - Graceful shutdown complete.
