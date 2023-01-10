@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/return-await */
 /* eslint-disable @typescript-eslint/no-useless-constructor */
 
-import { setDoc, doc, getDocs, collection, query, where, deleteDoc, getDoc } from 'firebase/firestore'
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { DataResponse, GenericItem, AnyDataPosted } from '../types'
-import { DAO } from '../clases/abstractClasses'
+import { setDoc, doc, getDocs, collection, getDoc } from 'firebase/firestore'
+// import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { DataResponse, GenericItem } from '../types'
+import { QuerySnapshot, SnapshotDocuments } from './firebaseMocks'
+// import { DAO } from '../clases/abstractClasses'
 import { v4 } from 'uuid'
 import db from '../config/firebase'
 /// //////////////////////////////////////
-import { it, describe, expect, vi } from 'vitest'
+import { it, describe, expect, vi, beforeEach, afterAll } from 'vitest'
 import { afterEach } from 'node:test'
 vi.mock('../node_modules/firebase/firestore')
-setDoc.mockReturnValue(Promise.resolve({}))
 // const setDoc = vi.fn().mockReturnValue(new Promise<void>((res, rej) => {
 //   res(
 //     // {
@@ -77,7 +77,12 @@ export function DbManager (collectionStr: string): IDao {
   }
 
   async function updateById (id: string, item: GenericItem): Promise<DataResponse> {
-
+    if (typeof id !== 'string') return new DataResponseClass([], 400, 'ID should be a string', 'Wrong ID', false)
+    if (Object.prototype.toString.call(id) !== '[object String]') return new DataResponseClass([], 400, 'ID should be a string', 'Wrong ID', false)
+    if (Object.prototype.toString.call(item) !== '[object Object]') return new DataResponseClass([], 400, 'Item should be an object', 'Item is not an object', false)
+    return await setDoc(doc(db, collectionRef, id), item)
+      .then(() => new DataResponseClass([{ ...item, id }], 200, 'Item succesifuly updated', '', true))
+      .catch(err => new DataResponseClass([], 400, 'Couldnt update item', err.toString(), false))
   }
 
   async function deleteById (id: string): Promise<DataResponse> {
@@ -87,8 +92,14 @@ export function DbManager (collectionStr: string): IDao {
 }
 
 const dbManager = DbManager('welcome')
-console.log(dbManager.addItem)
+/// /////////////////////////////////////////
+//                TESTS                   //
+/// ////////////////////////////////////////
+
 describe('DbManager addItem tests', () => {
+  const setDoc = vi.fn().mockReturnValueOnce(Promise.resolve())
+  beforeEach(setDoc.mockClear())
+
   it('addItem should be a function', () => {
     expect(typeof dbManager.addItem).toBe('function')
   })
@@ -99,26 +110,62 @@ describe('DbManager addItem tests', () => {
     expect(await dbManager.addItem({ item: { description: 'texto', title: 'titulo', render: true } })).toContain({ ok: true })
   })
   it('Expect setDoc to be called', async () => {
-    expect(setDoc).toBeCalled()
     const cosa = await dbManager.addItem({ item: { render: true, description: 'Adrian' } })
-    expect(cosa).toContain({ ok: true })
-    // expect(dbManager.addItem({ item: { render: true, description: 'Adrian' } })).toContain({ ok: true })
+    expect(setDoc).toHaveBeenCalled()
+    expect(cosa).toBeInstanceOf(DataResponseClass)
   })
 })
 describe('DbManager getAll functions', () => {
+  const getDocs = vi.fn().mockReturnValue(Promise.resolve(new QuerySnapshot([new SnapshotDocuments(true, 'algo', 'titulo'), new SnapshotDocuments(true, 'algo mas', 'titulo 1'), new SnapshotDocuments(true, 'something', 'title'), new SnapshotDocuments(true, 'something else', 'titulo')])))
+  beforeEach(getDocs.mockClear())
   it('Should be a function', () => {
     expect(typeof dbManager.getAll).toBe('function')
   })
+  it('Should call getDocs', async () => {
+    const respuesta = await dbManager.getAll()
+    expect(getDocs).toHaveBeenCalled()
+    expect(respuesta).toBeInstanceOf(DataResponseClass)
+  })
+})
 
-  describe('DbManager getById', () => {
-    it('Should contain false if id is not a string', async () => {
-      expect(await dbManager.getById(1)).toContain({ ok: false })
-      expect(await dbManager.getById({})).toContain({ ok: false })
-      expect(await dbManager.getById(true)).toContain({ ok: false })
-      expect(await dbManager.getById(NaN)).toContain({ ok: false })
-    })
-    it('Should return un valor truthy si param es tipo string', async () => {
-      expect(dbManager.getById('00637abb-40c2-4e04-bcd9-b395555ef99f')).toBeTruthy()
-    })
+describe('DbManager getById', () => {
+  const getDoc = vi.fn().mockReturnValue(new SnapshotDocuments(true, 'algo lindo', 'Genial NO?'))
+  beforeEach(getDoc.mockClear())
+  it('Should contain false if id is not a string', async () => {
+    expect(await dbManager.getById(1)).toContain({ ok: false })
+    expect(await dbManager.getById({})).toContain({ ok: false })
+    expect(await dbManager.getById(true)).toContain({ ok: false })
+    expect(await dbManager.getById(NaN)).toContain({ ok: false })
+  })
+  it('Should return un valor truthy si param es tipo string', async () => {
+    const respuesta = await dbManager.getById('00637abb-40c2-4e04-bcd9-b395555ef99f')
+    expect(getDoc).toHaveBeenCalled()
+    expect(respuesta).toBeInstanceOf(DataResponseClass)
+  })
+})
+describe('dbManager Update By ID Tests', async () => {
+  const response = await dbManager.updateById('00637abb-40c2-4e04-bcd9-b395555ef99f', { render: true, title: 'algun buen titulo', description: 'habrial que pensarlo' })
+
+  const setDoc = vi.fn().mockReturnValue(Promise.resolve({}))
+  beforeEach(setDoc.mockClear())
+  it('should be a function', () => {
+    expect(typeof dbManager.updateById).toBe('function')
+  })
+  it('Should contain false if id is not a string', async () => {
+    expect(await dbManager.updateById(1)).toContain({ ok: false })
+    expect(await dbManager.updateById({})).toContain({ ok: false })
+    expect(await dbManager.updateById(true)).toContain({ ok: false })
+    expect(await dbManager.updateById(NaN)).toContain({ ok: false })
+  })
+  it('Response should contain false if item is not an object', async () => {
+    expect(await dbManager.updateById('00637abb-40c2-4e04-bcd9-b395555ef99f')).toContain({ ok: false })
+    expect(await dbManager.updateById('00637abb-40c2-4e04-bcd9-b395555ef99f', 1)).toContain({ ok: false })
+    expect(await dbManager.updateById('00637abb-40c2-4e04-bcd9-b395555ef99f', true)).toContain({ ok: false })
+  })
+  it('setDoc should be called at least once', () => {
+    expect(setDoc).toHaveBeenCalled()
+  })
+  it('should return a DataResponseClass instance', () => {
+    expect(response).toBeInstanceOf(DataResponseClass)
   })
 })
