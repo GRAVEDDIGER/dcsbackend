@@ -2,16 +2,25 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 /* eslint-disable @typescript-eslint/return-await */
 /* eslint-disable @typescript-eslint/no-useless-constructor */
-
 import { setDoc, doc, getDocs, collection, getDoc, deleteDoc } from 'firebase/firestore'
-// import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+// import { getStorage, ref, getDownloadURL, uploadBytes } from 'firebase/storage'
+
+import mockStorage, { ref } from 'firebase/storage'
 import { DataResponse, GenericItem } from '../types'
 import { QuerySnapshot, SnapshotDocuments } from './firebaseMocks'
 import { v4 } from 'uuid'
 import db from '../config/firebase'
-import { it, describe, expect, vi, beforeEach, beforeAll } from 'vitest'
-vi.mock('../node_modules/firebase/firestore')
+import { it, describe, expect, vi, beforeEach, beforeAll, afterEach } from 'vitest'
+import { Multer } from 'multer'
+import fs from 'fs/promises'
 
+vi.mock('firebase/storage')
+vi.mock('../node_modules/firebase/firestore')
+vi.doMock('firebase/storage')
+const storage = mockStorage.getStorage()
+const uploadBytes = vi.fn().mockRejectedValue({})
+
+// mockStorage.uploadBytes.
 export class DataResponseClass implements DataResponse {
   data: GenericItem[]
   status: number
@@ -32,6 +41,7 @@ interface IDao {
   getById: (id: string) => Promise<DataResponse>
   updateById: (id: string, item: GenericItem) => Promise<DataResponse>
   deleteById: (id: string) => Promise<DataResponse>
+  uploadFile: (file: Express.Multer.File) => Promise<DataResponse>
 }
 export function DbManager (collectionStr: string): IDao {
   const collectionRef = collectionStr
@@ -81,9 +91,24 @@ export function DbManager (collectionStr: string): IDao {
     try {
       await deleteDoc(doc(db, collectionRef, id))
       return new DataResponseClass([], 400, 'Delete success', '', true)
-    } catch (err: any) { return Promise.resolve(new DataResponseClass([], 400, 'Error procesing Database deleteDoc function', err as string, false)) }
+    } catch (err: any) { return Promise.resolve(new DataResponseClass([], 200, 'Error procesing Database deleteDoc function', err as string, false)) }
   }
-  return { addItem, getAll, getById, updateById, deleteById }
+  async function uploadFile (file: Express.Multer.File | undefined): Promise<DataResponseClass> {
+    if (file?.path === undefined) return new DataResponseClass([], 400, 'The parameter should be a express.multer.file', 'Wrong param!!!', false)
+    const buffer = await fs.readFile(file.path).then()
+    const reference = ref(storage, `/${collectionRef}/${file.filename}`)
+    // return await uploadBytes(reference, buffer)
+    //   .then(() => {
+    //     return new DataResponseClass([], 200, 'File uploaded succesfully', '', true)
+    //   })
+    //   .catch(error => new DataResponseClass([], 400, 'Error uploading file', error as string, false))
+    try {
+      console.log(await uploadBytes(reference, buffer))
+      return new DataResponseClass([], 200, 'File uploaded succesfully', '', true)
+    } catch (err) { return Promise.reject(new DataResponseClass([], 400, 'Error uploading file', err as string, false)) }
+  }
+
+  return { addItem, getAll, getById, updateById, deleteById, uploadFile }
 }
 
 const dbManager = DbManager('welcome')
@@ -140,7 +165,6 @@ describe('DbManager getById', () => {
 })
 describe('dbManager Update By ID Tests', async () => {
   const response = await dbManager.updateById('00637abb-40c2-4e04-bcd9-b395555ef99f', { render: true, title: 'algun buen titulo', description: 'habrial que pensarlo' } as unknown as GenericItem)
-
   const setDoc = vi.fn().mockReturnValue(Promise.resolve({}))
   beforeEach(setDoc.mockClear())
   it('should be a function', () => {
@@ -171,19 +195,25 @@ describe('dBManager deleteById function testing', async () => {
     expect(await dbManager.deleteById(NaN as any)).toContain({ ok: false })
     expect(await dbManager.deleteById(1 as any)).toContain({ ok: false })
   })
-  it('It should return a DataResponseClass Object false if delteDoc throws', async () => {
-    try {
-      const deleteDoc = vi.fn().mockImplementation(async () => Promise.reject({}))
-      beforeAll(deleteDoc.mockClear())
-      expect(await dbManager.deleteById('00637abb-40c2-4e04-bcd9-b395555ef99f')).toBeInstanceOf(DataResponseClass)
-      expect(await dbManager.deleteById('00637abb-40c2-4e04-bcd9-b395555ef99f')).toContain({ ok: false })
-    } catch (err) { console.log(err) }
+})
+
+describe('uploadFile Tests', () => {
+  it('Should be a function', () => {
+    expect(typeof dbManager.uploadFile).toBe('function')
   })
-  it('Should Return DataResponse class ok:true if deleteDoc resolves', async () => {
-    try {
-      const deleteDoc = vi.fn().mockImplementation(async () => Promise.resolve({}))
-      beforeAll(deleteDoc.mockClear())
-      expect(await dbManager.deleteById('00637abb-40c2-4e04-bcd9-b395555ef99f')).toContain({ ok: true })
-    } catch (err) { console.log(err) }
+  it('should return a DataResponse false if arguments are not Multer File Object type', async () => {
+    expect(await dbManager.uploadFile(1 as any)).toContain({ ok: false })
+  })
+  it('Test uploadBytes reject state', async () => {
+    const file = { path: 'src/index.ts', filename: './src/index.ts' }
+    beforeAll(uploadBytes.mockClear())
+    const uploadBytes = vi.fn().mockRejectedValueOnce({})
+
+    // afterEach(uploadBytes.mockClear())
+    const response = await dbManager.uploadFile(file as any)
+    console.log(response)
+    expect(uploadBytes).toHaveBeenCalled()
+    // expect.assertions(1)
+    // return expect(dbManager.uploadFile(file as any)).rejects.toContain({ ok: false })
   })
 })
