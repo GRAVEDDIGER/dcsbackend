@@ -41,6 +41,7 @@ export interface DataObjectVal {
   key: string
 }
 export interface GenericItem {
+  render: boolean
   id?: string
   item: News | Welcome | About | Volunteers
 }

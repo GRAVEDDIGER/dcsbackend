@@ -3,16 +3,17 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 /* eslint-disable @typescript-eslint/return-await */
 /* eslint-disable @typescript-eslint/no-useless-constructor */
-import { doc, getDocs, collection, getDoc } from 'firebase/firestore'
+import { doc, collection } from 'firebase/firestore'
 // import { getStorage, ref, getDownloadURL, uploadBytes } from 'firebase/storage'
 import { DataResponse, GenericItem } from '../types'
 import { QuerySnapshot, SnapshotDocuments } from './firebaseMocks'
 import { v4 } from 'uuid'
 import db from '../config/firebase'
-import { it, describe, expect, vi, afterEach, beforeAll } from 'vitest'
+import { it, describe, expect, vi, afterEach, beforeAll, beforeEach } from 'vitest'
 import { Multer } from 'multer'
 import fs from 'fs/promises'
 import color from 'colors'
+import { idText } from 'typescript'
 // vi.mock('firebase/storage')
 vi.mock('../node_modules/firebase/firestore')
 const storage = vi.fn().mockResolvedValue({})
@@ -27,6 +28,14 @@ const uploadBytes = vi.fn()
 const setDoc = vi.fn()
   .mockRejectedValueOnce('')
   .mockReturnValue(Promise.resolve())
+
+const getDoc = vi.fn()
+  .mockRejectedValueOnce('')
+  .mockResolvedValue(Promise.resolve(new SnapshotDocuments(true, 'algo lindo', 'Genial NO?')))
+
+const getDocs = vi.fn()
+  .mockRejectedValueOnce('')
+  .mockResolvedValue(Promise.resolve([new SnapshotDocuments(true, 'Titulo', 'Descripcion'), new SnapshotDocuments(true, 'Otro Title', 'Otra Descripcion'), new SnapshotDocuments(true, 'Intereesante', 'Que se yo...')]))
 
 // afterEach(vi.clearAllMocks() as any)
 // mockStorage.uploadBytes .
@@ -57,31 +66,33 @@ export function DbManager (collectionStr: string): IDao {
 
   async function addItem (item: GenericItem): Promise<DataResponse> {
     const id = v4()
-    if (!('render' in item.item)) return new DataResponseClass([], 400, 'Render is not in the item object', 'Bad Request', false)
+    console.log(item)
+    if (item?.render === undefined) return new DataResponseClass([], 400, 'Render is not in the item object', 'Bad Request', false)
     else {
       return await setDoc(doc(db, collectionRef, id), { ...item.item, id })
         .then(() => new DataResponseClass([{ ...item, id }], 201, 'Item successfully created ', '', true))
-        .catch(() => new DataResponseClass([], 500, 'Failed to create the item', 'Failed conenection', false))
+        .catch(async (err: any) => Promise.reject(new DataResponseClass([], 500, 'Failed to create the item', err.toString() as string, false)))
     }
   }
 
   async function getAll (): Promise<DataResponse> {
-    return await getDocs(collection(db, collectionRef)).then(response => {
+    return await getDocs(collection(db, collectionRef)).then((response: any) => {
       const dataArray: any = []
-      response.forEach(item => dataArray.push(item.data()))
+      response.forEach((item: any) => dataArray.push(item.data()))
       return new DataResponseClass(dataArray, 200, 'Information obtained', '', true)
-    }).catch(err => new DataResponseClass([], 400, 'Couldnt Retrieve data', err.toString(), false))
+    }).catch(async (err: any) => Promise.reject(new DataResponseClass([], 400, 'Couldnt Retrieve data', err.toString(), false)))
   }
 
   async function getById (id: string): Promise<DataResponse> {
     if (typeof id !== 'string') return new DataResponseClass([], 400, 'Couldnt Retrieve data', 'ID is NOT a string', false)
     if (Object.prototype.toString.call(id) !== '[object String]') return new DataResponseClass([], 400, 'Couldnt Retrieve data', 'ID is NOT a string', false)
     const docRef = doc(db, collectionRef, id)
-    const docs: GenericItem = await getDoc(docRef) as unknown as GenericItem
-    const tempArray: GenericItem[] = []
-    tempArray.push({ ...docs })
-    if (docs !== undefined) return new DataResponseClass(tempArray, 200, 'Data retrived', '', true)
-    return new DataResponseClass([], 400, 'Request failed', 'Document doesnt exists', false)
+    return await getDoc(docRef)
+      .then((docs: any) => {
+        if (docs === undefined) throw new Error('Id doesnt exists')
+        return new DataResponseClass(docs, 200, 'Data retrived', '', true)
+      })
+      .catch(async (err: any) => Promise.reject(new DataResponseClass([], 400, 'Request failed', err, false)))
   }
 
   async function updateById (id: string, item: GenericItem): Promise<DataResponse> {
@@ -120,54 +131,60 @@ const dbManager = DbManager('welcome')
 //                TESTS                   //
 /// ////////////////////////////////////////
 
-// describe('DbManager addItem tests', () => {
-//   const setDoc = vi.fn().mockReturnValueOnce(Promise.resolve())
-//   beforeEach(setDoc.mockClear())
+describe('DbManager addItem tests', () => {
+  it('Should return ok:false if setDoc is rejected', async () => {
+    dbManager.addItem({ description: 'texto', title: 'texto' } as any)
+      .then(() => console.log(color.bgGreen.bold('Resolved setdoc')))
+      .catch(err => console.log(color.bgRed.white.bold(err)))
+  })
+  it('should return false if render is not in the object', async () => {
+    expect(await dbManager.addItem({ item: { description: 'texto', title: 'texto' } } as GenericItem)).toContain({ ok: false })
+  })
+}
+)
+describe('DbManager getAll functions', () => {
+  it('Should return ok:false in getDocs.reject()', async () => {
+    dbManager.getAll()
+      .then(() => console.log(color.bgGreen.bold('Resolved getDocs')))
+      .catch((err: any) => {
+        expect(err).toContain({ ok: false })
+        console.log(color.bgRed.white.bold(`Rejected getDocs ${err.err.toString() as string}`))
+      })
+  })
+  it('Should return ok:true in getDocs.resolve()', async () => {
+    dbManager.getAll()
+      .then((res) => {
+        expect(res).toContain({ ok: true })
+        console.log(color.bgGreen.bold('Resolved getDocs'))
+      })
+      .catch((err: any) => {
+        console.log(color.bgRed.white.bold(`Rejected getDocs ${err.err.toString() as string}`))
+      })
+  })
+})
 
-//   it('addItem should be a function', () => {
-//     expect(typeof dbManager.addItem).toBe('function')
-//   })
-//   it('should return false if render is not in the object', async () => {
-//     expect(await dbManager.addItem({ item: { description: 'texto', title: 'texto' } } as GenericItem)).toContain({ ok: false })
-//   })
-//   it('Should return ok if render is present in the object', async () => {
-//     expect(await dbManager.addItem({ item: { description: 'texto', title: 'titulo', render: true } } as GenericItem)).toContain({ ok: true } as unknown as GenericItem)
-//   })
-//   it('Expect setDoc to be called', async () => {
-//     const cosa = await dbManager.addItem({ item: { render: true, description: 'Adrian' } } as GenericItem)
-//     expect(setDoc).toHaveBeenCalled()
-//     expect(cosa).toBeInstanceOf(DataResponseClass)
-//   })
-// })
-// describe('DbManager getAll functions', () => {
-//   const getDocs = vi.fn().mockReturnValue(Promise.resolve(new QuerySnapshot([new SnapshotDocuments(true, 'algo', 'titulo'), new SnapshotDocuments(true, 'algo mas', 'titulo 1'), new SnapshotDocuments(true, 'something', 'title'), new SnapshotDocuments(true, 'something else', 'titulo')])))
-//   beforeEach(getDocs.mockClear())
-//   it('Should be a function', () => {
-//     expect(typeof dbManager.getAll).toBe('function')
-//   })
-//   it('Should call getDocs', async () => {
-//     const respuesta = await dbManager.getAll()
-//     expect(getDocs).toHaveBeenCalled()
-//     expect(respuesta).toBeInstanceOf(DataResponseClass)
-//   })
-// })
-
-// describe('DbManager getById', () => {
-//   const getDoc = vi.fn().mockReturnValue(new SnapshotDocuments(true, 'algo lindo', 'Genial NO?'))
-//   beforeEach(getDoc.mockClear())
-//   it('Should contain false if id is not a string', async () => {
-//     expect(await dbManager.getById(1 as any)).toContain({ ok: false })
-//     expect(await dbManager.getById({} as any)).toContain({ ok: false })
-//     expect(await dbManager.getById(true as any)).toContain({ ok: false })
-//     expect(await dbManager.getById(NaN as any)).toContain({ ok: false })
-//   })
-//   it('Should return un valor truthy si param es tipo string', async () => {
-//     const respuesta = await dbManager.getById('00637abb-40c2-4e04-bcd9-b395555ef99f')
-//     expect(getDoc).toHaveBeenCalled()
-//     expect(respuesta).toBeInstanceOf(DataResponseClass)
-//   })
-// })
+describe('DbManager getById', () => {
+  it('should get a false value in getDoc Reject', async () => {
+    dbManager.getById('texto')
+      .then(() => console.log(color.bgGreen.bold('Resolved getDoc')))
+      .catch((err) => {
+        console.log(color.bgRed.white.bold('Rejected getDoc'))
+        expect(err).toContain({ ok: false })
+      })
+  })
+  it('should get a true value in getDoc Resolves', async () => {
+    dbManager.getById('texto')
+      .then((res) => {
+        console.log(color.bgGreen.bold('Resolved getDoc'))
+        expect(res).toContain({ ok: true })
+      })
+      .catch(() => {
+        console.log(color.bgRed.white.bold('Rejected getDoc'))
+      })
+  })
+})
 describe('dbManager Update By ID Tests', async () => {
+  beforeEach(setDoc.mockClear)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   it('Should return ok:false if setDocs is rejected', async () => {
     dbManager.updateById('texto', {} as any)
