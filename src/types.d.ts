@@ -40,11 +40,7 @@ export interface DataObjectVal {
   ok: boolean
   key: string
 }
-export interface GenericItem {
-  render: boolean
-  id?: string
-  item: News | Welcome | About | Volunteers
-}
+export type GenericItem = Required< News | Welcome | About | Volunteers>
 export interface DataResponse {
   data: GenericItem[]
   status: number
